@@ -61,42 +61,34 @@ function filterExcel(sheetURL,datasheetUrl) {
   //Fetch ss and its length
   var sheet = SpreadsheetApp.openByUrl(datasheetUrl);
   var range = sheet.getDataRange();  
-  //logger.log(range)
   var lastRow = sheet.getLastRow();
   var response = sheet.get
   var responseRow = 'B' + lastRow.toString()
-  var code =  sheet.getRange(responseRow).getValue();  //hardcoded code, need to work on getting one from the user
+  var code =  sheet.getRange(responseRow).getValue(); 
 
   
   //Fetches new sheet
   var newSheet = SpreadsheetApp.openByUrl(sheetURL);
   
-  //newSheet.appendRow(["Timestamp"]);
-  ////logger.log(header);
   // Fetch values for each row in the Range.
   var data = range.getValues();
   newSheet.appendRow(data[0])
   var totalResponses = 0;
-  ////logger.log(data) ;
-  ////logger.log(length1);
+
   for (var i in data ) {  // iterates through
     var row = data[i];
-    ////logger.log(row);
     if ( row[1] == code )     // if the code input is the same as the company code, it adds the new row to the existing spreadsheet
     {
       newSheet.appendRow(row);
       totalResponses = totalResponses + 1
       i = i + 1; 
-      //logger.log(i);
     }
     else
     { 
-      //logger.log('else');
       i = i + 1; 
-      //logger.log('increment');
     } 
 
-  }
+  } 
    return [totalResponses,code] 
 
 }
@@ -108,9 +100,7 @@ function filterExcelMonthly(sheetURL,datasheetUrl,configUrl) {
   //Fetch ss and its length
   var sheet = SpreadsheetApp.openByUrl(datasheetUrl);
   var range = sheet.getDataRange();  
-  ////logger.log(range+ ' Range' )
   var lastRow = sheet.getLastRow();
-  //logger.log(lastRow + ' last Row ' )
   var doc = DocumentApp.openByUrl(configUrl)
   var body = doc.getBody();
   var rawText = body.getText();
@@ -128,23 +118,19 @@ function filterExcelMonthly(sheetURL,datasheetUrl,configUrl) {
     //logger.log(data + ' Data ' )
     newSheet.appendRow(data[0])
     var totalResponses = 0;
-  ////logger.log(data) ;
-  ////logger.log(length1);
+
     for (var i in data ) {  // iterates through
       var row = data[i];
-    ////logger.log(row);
+
       if ( row[1] == code )     // if the code input is the same as the company code, it adds the new row to the existing spreadsheet
       {
         newSheet.appendRow(row);
         totalResponses = totalResponses + 1
         i = i + 1; 
-        //logger.log(i);
       }
       else
       { 
-        //logger.log('else');
         i = i + 1; 
-        //logger.log('increment');
       } 
 
   }
@@ -183,7 +169,8 @@ function takeinConfig(lrIndex,sheetURL,configUrl){
   var rawSI = text[2];  // gets the raw ques num lists
   var rawAPP = text[3];
   var rawEE = text[4];
-
+  var sheet = SpreadsheetApp.openByUrl(sheetURL)
+  var lastLastIndex = sheet.getLastRow();
   var raws = [rawCCL,rawAE,rawSI,rawAPP,rawEE] 
   for (num in raws){   // iterates through each set of questions 
     var list1 = raws[num];   
@@ -210,7 +197,35 @@ function takeinConfig(lrIndex,sheetURL,configUrl){
     
     var sheet = SpreadsheetApp.openByUrl(sheetURL) // appends to form
     sheet.appendRow([name,rangeStr])  
-    }}
+    }
+var idkCells = [];
+var idkAvgStr = '';
+var oppCells = [];  
+  for ( var i = lrIndex + 2; i <= lastLastIndex; i++){
+    var cellVal = 'F' + i.toString();
+    var cellVal1 = 'G' + i.toString();
+      oppCells.push(cellVal);
+      idkCells.push(cellVal1);
+}
+ var avgStr = '=AVERAGE(';
+ var oppStr = '=AVERAGE(';
+  for (num in oppCells){
+    cell = oppCells[num];
+    cell2 = idkCells[num];
+    var avgStr = avgStr + cell2 + ',';
+    var oppStr = oppStr + cell + ',';}
+  var oppStr = oppStr.slice(0,-1) + ')';
+  var avgStr = avgStr.slice(0,-1) + ')';
+  
+  var lastRow = sheet.getLastRow();
+  var oppThreshholdStr = '=(B' + (lastRow+1) + '*1.5)';
+  var idkThreshholdStr = '=(B' + (lastRow+2) + '*1.5)';
+  sheet.appendRow(['oppAVG' , oppStr]);
+  sheet.appendRow(['idkAVG' , avgStr]);
+  sheet.appendRow(['OppThreshhold',oppThreshholdStr]);
+  sheet.appendRow(['IDKThreshhold',idkThreshholdStr]);
+
+}
   
 
 
@@ -222,7 +237,6 @@ function basicAnalytics(newSheetURL,totalResponses){  // Copies sheets formulas 
   var lastdataindex = lastRowIndex.toString()
   var lastcol = sheet.getLastColumn();
   var strings = "A2:"+columnToLetter(lastcol)+lastdataindex
-  ////logger.log(strings);
   var range = sheet.getRange(strings); // extracts data from sheet
   
   var numCols = range.getNumColumns();
@@ -265,22 +279,23 @@ function basicAnalytics(newSheetURL,totalResponses){  // Copies sheets formulas 
                 }
                 perArray.push('=B' + rowcount +'/C' + rowcount + '*100');
                 
-                ////logger.log(countArray[l])
+
                 totArray.push(totresp);
               }
             
             for( h in dataArray)
             {
               sheet.appendRow([dataArray[h], countArray[h], totArray[h], perArray[h]]);
-              //rowcount++;
+
             }
-            //sheet.appendRow(countArray)
+
             
           }    // END OF FOR LOOP 
   
   
  //For Agree/Disagree questions 
   var beforeQues = sheet.getLastRow();
+  var firstQues = beforeQues + 2;
   sheet.appendRow(['Question',"Agree","Neither Agree or Disagree","Disagree",'Don'+"'"+'t Know','Opp','IDK']); //Headings for counts
   var rowStr = rowcount+2
   var markstart = rowStr
@@ -385,7 +400,6 @@ function basicAnalytics(newSheetURL,totalResponses){  // Copies sheets formulas 
   var source2 = ss3.getSheets()[1];
   var destination1 = ss3.getSheets()[2];
   var tempstr = "A"+(markend-markstart+1-19)+":A"+(markend-markstart+1)
-  //logger.log(tempstr)
   var range1 = source2.getRange(tempstr);
   range1.copyValuesToRange(destination1, 3, 3, 2, 21);
   
@@ -397,7 +411,6 @@ function basicAnalytics(newSheetURL,totalResponses){  // Copies sheets formulas 
   var range1 = source2.getRange(tempstr2);
   range1.copyValuesToRange(destination1, 4, 4, 2, 21);
   
-  //logger.log(beforeQues + " Last Ques Row" )
   return beforeQues
 }
 
@@ -412,7 +425,17 @@ function emailNotification(code,newSheetUrl){   // Emails user a link to the new
         
 } 
 
-
+function newChart() {
+  SpreadsheetApp.setActiveSpreadsheet(sheetFinal);
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var source = ss.getSheets()[0];
+  var destination = ss.getSheets()[3];
+  var chart = source.newChart()
+    .setChartType(Charts.ChartType.BAR)
+    .addRange(source.getRange('B8:D10'))
+    .setPosition(1, 1, 0, 0)
+    .build();
+  destination.insertChart(chart);}
 
 function mainMonthly(){
   var yesOrNo = searchForFile(); // returns whether or not to make new sheet
@@ -420,6 +443,7 @@ function mainMonthly(){
   var newSheetURL = URLs[2];
   clearRange1(newSheetURL); // deletes current entries
   var tuple =  filterExcelMonthly(newSheetURL,URLs[1],URLs[0]); //re generates entries
+  newChart();
 
 }
 function main2() {    // Ties all functions together with email notification, triggers every month 
