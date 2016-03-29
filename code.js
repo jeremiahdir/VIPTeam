@@ -224,7 +224,7 @@ var oppCells = [];
   sheet.appendRow(['idkAVG' , avgStr]);
   sheet.appendRow(['OppThreshhold',oppThreshholdStr]);
   sheet.appendRow(['IDKThreshhold',idkThreshholdStr]);
-
+  
 }
   
 
