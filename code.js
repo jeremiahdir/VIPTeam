@@ -425,17 +425,17 @@ function emailNotification(code,newSheetUrl){   // Emails user a link to the new
         
 } 
 
-function newChart() {
-  SpreadsheetApp.setActiveSpreadsheet(sheetFinal);
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var source = ss.getSheets()[0];
-  var destination = ss.getSheets()[3];
-  var chart = source.newChart()
-    .setChartType(Charts.ChartType.BAR)
-    .addRange(source.getRange('B8:D10'))
-    .setPosition(1, 1, 0, 0)
-    .build();
-  destination.insertChart(chart);}
+//function newChart() {
+//  SpreadsheetApp.setActiveSpreadsheet(sheetFinal);
+//  var ss = SpreadsheetApp.getActiveSpreadsheet();
+//  var source = ss.getSheets()[0];
+//  var destination = ss.getSheets()[3];
+//  var chart = source.newChart()
+//    .setChartType(Charts.ChartType.BAR)
+//    .addRange(source.getRange('B8:D10'))
+//    .setPosition(1, 1, 0, 0)
+//    .build();
+//  destination.insertChart(chart);}
 
 function mainMonthly(){
   var yesOrNo = searchForFile(); // returns whether or not to make new sheet
