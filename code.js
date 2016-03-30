@@ -48,7 +48,7 @@ function searchForFile(){ //Checks that the sheet doesn't already exist
 
 function clearRange1(sheetURL) { //deletes old entries
   var sheet = SpreadsheetApp.openByUrl(sheetURL); // fetches new sheet
-  var range = sheet.getDataRange().clearContent(); // deletes all data in data range
+  var range = sheet.getDataRange().clear(); // deletes all data in data range
   
 }
 
@@ -89,7 +89,7 @@ function filterExcel(sheetURL,datasheetUrl) {
     } 
 
   } 
-   return [totalResponses,code] 
+   return [totalResponses,code,lastRow] 
 
 }
 
@@ -197,8 +197,9 @@ function takeinConfig(lrIndex,sheetURL,configUrl){
     
     var sheet = SpreadsheetApp.openByUrl(sheetURL) // appends to form
     sheet.appendRow([name,rangeStr])  
-    }
-var idkCells = [];
+    } 
+ // does the idk/opp averages as well as the five scores 
+var idkCells = [];  
 var idkAvgStr = '';
 var oppCells = [];  
   for ( var i = lrIndex + 2; i <= lastLastIndex; i++){
@@ -224,8 +225,21 @@ var oppCells = [];
   sheet.appendRow(['idkAVG' , avgStr]);
   sheet.appendRow(['OppThreshhold',oppThreshholdStr]);
   sheet.appendRow(['IDKThreshhold',idkThreshholdStr]);
+  // adds the bar graph of the five scores
+  var sheet = SpreadsheetApp.getActiveSheet(); // change to report sheet
+  var finalSheet = 1//...
+  var chart = sheet.getCharts()
+  for( num in chart){
+    var chart1 = chart[num];
+    sheet.removeChart(chart1); }
+  var chartBuilder = sheet.newChart();
+  var range = sheet.getRange(lastRow,1,5,2);
   
-}
+  chartBuilder.addRange(range)
+       .setChartType(Charts.ChartType.BAR)
+       .setOption('title', 'Scores');
+ }
+
   
 
 
@@ -245,10 +259,11 @@ function basicAnalytics(newSheetURL,totalResponses){  // Copies sheets formulas 
   var responses = ['']
 
   sheet.appendRow(responses);
-  var range2 = sheet.getDataRange();
-      
+  var range2 = sheet.getDataRange();     
   //For initial questions
   var rowcount = lastRowIndex;
+  var rowcount2 = lastRowIndex;
+  //Logger.log(rowcount + " rowcount");
           for (var i = 2; i <= 10; i++) {
             var withString = 'Question '+(i-1).toString();
             var dataArray = [withString];
@@ -258,16 +273,16 @@ function basicAnalytics(newSheetURL,totalResponses){  // Copies sheets formulas 
             rowcount++;
             
             var colname = columnToLetter(i);
-            var totresp = '=COUNTA('+ colname+ '1:'+ colname + lastdataindex+')'
-            
-              for (var j = 1; j <= numRows; j++) {
+            var totresp = '=COUNTA('+ colname+ '2:'+ colname + lastdataindex+')'
+            var dict = {};
+            for (var j = 1; j <= numRows; j++) {
                 var currentValue = range.getCell(j,i).getValue();
                 var dup = false
-                for( l in dataArray){
-                  if(dataArray[l] == currentValue && currentValue !=''){
+                Logger.log(dataArray)
+                for(l in dataArray){
+                   if(dataArray[l] == currentValue && currentValue !=''){
                     dup=true;
                     countArray[l]++;
-                      //rowcount++;
                   }
                 
                  }
@@ -282,7 +297,7 @@ function basicAnalytics(newSheetURL,totalResponses){  // Copies sheets formulas 
 
                 totArray.push(totresp);
               }
-            
+            //Logger.log(perArray);
             for( h in dataArray)
             {
               sheet.appendRow([dataArray[h], countArray[h], totArray[h], perArray[h]]);
@@ -290,7 +305,7 @@ function basicAnalytics(newSheetURL,totalResponses){  // Copies sheets formulas 
             }
 
             
-          }    // END OF FOR LOOP 
+          }    // END OF FOR LOOP
   
   
  //For Agree/Disagree questions 
@@ -425,17 +440,17 @@ function emailNotification(code,newSheetUrl){   // Emails user a link to the new
         
 } 
 
-//function newChart() {
-//  SpreadsheetApp.setActiveSpreadsheet(sheetFinal);
-//  var ss = SpreadsheetApp.getActiveSpreadsheet();
-//  var source = ss.getSheets()[0];
-//  var destination = ss.getSheets()[3];
-//  var chart = source.newChart()
-//    .setChartType(Charts.ChartType.BAR)
-//    .addRange(source.getRange('B8:D10'))
-//    .setPosition(1, 1, 0, 0)
-//    .build();
-//  destination.insertChart(chart);}
+function newChart(newUrl) {
+  
+  var ss = SpreadsheetApp.openByUrl(newUrl);
+  var source = ss.getSheets()[0];
+  var destination = ss.getSheets()[3];
+  var chart = source.newChart()
+    .setChartType(Charts.ChartType.BAR)
+    .addRange(source.getRange('B8:D10'))
+    .setPosition(1, 1, 25, 25)
+    .build();
+  destination.insertChart(chart);}
 
 function mainMonthly(){
   var yesOrNo = searchForFile(); // returns whether or not to make new sheet
@@ -443,7 +458,7 @@ function mainMonthly(){
   var newSheetURL = URLs[2];
   clearRange1(newSheetURL); // deletes current entries
   var tuple =  filterExcelMonthly(newSheetURL,URLs[1],URLs[0]); //re generates entries
-  newChart();
+  //newChart();
 
 }
 function main2() {    // Ties all functions together with email notification, triggers every month 
@@ -455,7 +470,8 @@ function main2() {    // Ties all functions together with email notification, tr
   var totalResponse = tuple[0]
   var code2 = tuple[1]
   var lastRowIndex = basicAnalytics(newSheetURL,totalResponse); // applies basic analytics to entries and adds
-  takeinConfig(lastRowIndex,newSheetURL,URLs[0])
+  takeinConfig(lastRowIndex,newSheetURL,URLs[0]);
+ // newChart(newSheetURL);
  // emailNotification(code2,newSheetURL); // sends email notification to user
   
 } 
